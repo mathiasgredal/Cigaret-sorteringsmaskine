@@ -1,25 +1,11 @@
 #include "avgimgplot.h"
 
-
 AvgImgPlot::AvgImgPlot(QWidget *parent)
-  : QCustomPlot(parent)
+  : QWidget(parent)
 {
-    this->setOpenGl(true, 2);
-    this->addGraph();
-    this->graph(0)->setPen(QPen(QColor(255, 50, 0)));
-    // give the axes some labels:
-    this->xAxis->setLabel("Tid (sek)");
-    this->yAxis->setLabel("Lysstyrke af billede (0-255)");
 
-    // Add time axis
-    QSharedPointer<QCPAxisTickerTime> timeTicker(new QCPAxisTickerTime);
-    timeTicker->setTimeFormat("%s");
-    this->xAxis->setTicker(timeTicker);
-    this->axisRect()->setupFullAxesBox();
-    this->yAxis->setRange(0, 255);
-
-    // Draw
-    this->replot();
+    starttime = (QDateTime::currentMSecsSinceEpoch()*0.01);
+    dataPoints.append(QPointF(0,0));
 }
 
 AvgImgPlot::~AvgImgPlot()
@@ -28,27 +14,58 @@ AvgImgPlot::~AvgImgPlot()
 
 }
 
-void AvgImgPlot::addPoint(float meanColor){
+float AvgImgPlot::map(float x, float in_min, float in_max, float out_min, float out_max)
+{
+  return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
+}
 
-    static QTime time(QTime::currentTime());
-    // calculate two new data points:
-    double key = time.elapsed()/1000.0; // time elapsed since start of demo, in seconds
-    static double lastPointKey = 0;
-    if (key-lastPointKey > 0.05) // at most add point every 50 ms
-    {
-      // add data to lines:
-      this->graph(0)->addData(key, meanColor);
-      lastPointKey = key;
-      this->xAxis->setRange(key, 8, Qt::AlignRight);
-      this->replot();
+void AvgImgPlot::paintEvent(QPaintEvent *event)
+{
+    //create a QPainter and pass a pointer to the device.
+    //A paint device can be a QWidget, a QPixmap or a QImage
+    QPainter painter(this);
+
+    //create a white pen that has solid line
+    //and the width is 2.
+    QPen myPen(Qt::white, 1, Qt::SolidLine);
+    painter.setPen(myPen);
+
+    painter.drawLines(dataPoints);
+
+    QPen refPen(Qt::green, 1, Qt::SolidLine);
+    painter.setPen(refPen);
+    painter.drawLine(0, map(refLine,0,255,0,this->height()), this->width(), map(refLine,0,255,0,this->height()));
+}
+void AvgImgPlot::SetRefLine(float refColor){
+    refLine = refColor;
+}
+
+
+void AvgImgPlot::addPoint(float meanColor){
+    float timeSinceStart = (QDateTime::currentMSecsSinceEpoch()*0.01)-starttime;
+
+    float xPos = map(timeSinceStart, timeSinceStart-(xAxisSpan*0.5), timeSinceStart+(xAxisSpan*0.5), 0,this->width());
+    float yPos = map(meanColor, 0,yAxisSpan,0,this->height());
+
+    float xPosDelta = (timeSinceStart-lasTimeSinceStart)*graphSpeed;
+
+    for (int i = 0; i < dataPoints.length(); i++) {
+        dataPoints[i].setX(dataPoints[i].x() - xPosDelta);
     }
 
+    dataPoints.append(QPointF(xPos, yPos));
+    dataPoints.append(QPointF(xPos, yPos));
 
-    //qInfo() << meanColor;
+
+    this->update();
+
+    lasTimeSinceStart = timeSinceStart;
 }
 
 void AvgImgPlot::clearGraph(){
+    /*
     this->graph(0)->data().clear();
     this->replot();
+    */
 }
 

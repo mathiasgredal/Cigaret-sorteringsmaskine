@@ -1,26 +1,22 @@
 #include "mpvwidget.h"
-#include <stdexcept>
 #include <QtGui/QOpenGLContext>
-#include <QtGui/QOpenGLFunctions>
-#include <QtCore/QMetaObject>
-#include <QDebug>
-#include <vector>
+
 
 
 static void wakeup(void *ctx)
 {
-    QMetaObject::invokeMethod((MpvWidget*)ctx, "on_mpv_events", Qt::QueuedConnection);
+    QMetaObject::invokeMethod(static_cast<MpvWidget*>(ctx), "on_mpv_events", Qt::QueuedConnection);
 }
 
 static void *get_proc_address(void *ctx, const char *name) {
     Q_UNUSED(ctx);
     QOpenGLContext *glctx = QOpenGLContext::currentContext();
     if (!glctx)
-        return NULL;
+        return nullptr;
     return (void *)glctx->getProcAddress(QByteArray(name));
 }
 
-MpvWidget::MpvWidget(QWidget *parent, Qt::WindowFlags f)
+MpvWidget::MpvWidget( QWidget *parent, Qt::WindowFlags f)
     : QOpenGLWidget(parent, f)
 {
     mpv = mpv::qt::Handle::FromRawHandle(mpv_create());
@@ -35,7 +31,6 @@ MpvWidget::MpvWidget(QWidget *parent, Qt::WindowFlags f)
     // Make use of the MPV_SUB_API_OPENGL_CB API.
     mpv::qt::set_option_variant(mpv, "vo", "opengl-cb");
 
-    // Request hw decoding, just for testing.
     mpv::qt::set_option_variant(mpv, "hwdec", "auto");
     //mpv::qt::set_option_variant(mpv, "profile", "low-latency");
     //mpv::qt::set_option_variant(mpv, "opengl-glfinish", "yes");
@@ -43,14 +38,12 @@ MpvWidget::MpvWidget(QWidget *parent, Qt::WindowFlags f)
     //mpv::qt::set_option_variant(mpv, "fps", "30");
     //mpv::qt::set_option_variant(mpv, "untimed", "");
 
-    mpv_gl = (mpv_opengl_cb_context *)mpv_get_sub_api(mpv, MPV_SUB_API_OPENGL_CB);
+    mpv_gl = static_cast<mpv_opengl_cb_context *>(mpv_get_sub_api(mpv, MPV_SUB_API_OPENGL_CB));
     if (!mpv_gl)
         throw std::runtime_error("OpenGL not compiled in");
-    mpv_opengl_cb_set_update_callback(mpv_gl, MpvWidget::on_update, (void *)this);
+    mpv_opengl_cb_set_update_callback(mpv_gl, MpvWidget::on_update, static_cast<void *>(this));
     connect(this, SIGNAL(frameSwapped()), SLOT(swapped()));
 
-    mpv_observe_property(mpv, 0, "duration", MPV_FORMAT_DOUBLE);
-    mpv_observe_property(mpv, 0, "time-pos", MPV_FORMAT_DOUBLE);
     mpv_set_wakeup_callback(mpv, wakeup, this);
 }
 
@@ -58,11 +51,27 @@ MpvWidget::~MpvWidget()
 {
     makeCurrent();
     if (mpv_gl)
-        mpv_opengl_cb_set_update_callback(mpv_gl, NULL, NULL);
+        mpv_opengl_cb_set_update_callback(mpv_gl, nullptr, nullptr);
     // Until this call is done, we need to make sure the player remains
     // alive. This is done implicitly with the mpv::qt::Handle instance
     // in this class.
     mpv_opengl_cb_uninit_gl(mpv_gl);
+}
+
+QImage MpvWidget::screenCapture()
+{
+    mpv_opengl_cb_draw(mpv_gl, defaultFramebufferObject(),640.0*2 ,-480*2);
+
+    return QOpenGLWidget::grabFramebuffer().convertToFormat(QImage::Format_RGB888);
+}
+
+void MpvWidget::resizeEvent(QResizeEvent *event)
+{
+    event->accept();
+
+    //float aspectRatio = 640.0/480.0;
+    //QWidget::resize(event->size().height()*aspectRatio,event->size().height());
+    QWidget::resize(640,480);
 }
 
 void MpvWidget::command(const QVariant& params)
@@ -82,7 +91,7 @@ QVariant MpvWidget::getProperty(const QString &name) const
 
 void MpvWidget::initializeGL()
 {
-    int r = mpv_opengl_cb_init_gl(mpv_gl, NULL, get_proc_address, NULL);
+    int r = mpv_opengl_cb_init_gl(mpv_gl, nullptr, get_proc_address, nullptr);
     if (r < 0)
         throw std::runtime_error("could not initialize OpenGL");
 }
@@ -90,34 +99,41 @@ void MpvWidget::initializeGL()
 void MpvWidget::stopStream(){
     makeCurrent();
     if (mpv_gl)
-        mpv_opengl_cb_set_update_callback(mpv_gl, NULL, NULL);
+        mpv_opengl_cb_set_update_callback(mpv_gl, nullptr, nullptr);
 
     mpv_opengl_cb_uninit_gl(mpv_gl);
 }
 
 void MpvWidget::paintGL()
 {
-    mpv_opengl_cb_draw(mpv_gl, defaultFramebufferObject(), 2*width(), -2*height());
+    mpv_opengl_cb_draw(mpv_gl, defaultFramebufferObject(),640.0*2 ,-480*2);
 
-    // Calculate mean color
-    auto frame = QOpenGLWidget::grabFramebuffer();
-    auto pixelData = frame.convertToFormat(QImage::Format_RGB888);
-    long int avg = 0;
+    framenum++;
 
-    // TODO: stop using scanlines, find a way to use pixeldata.constBits()
-    for (int i = 0; i < frame.height(); i += 1)
-    {
-        const uchar *scanLine = pixelData.constScanLine(i);
-        avg += (int) scanLine[0];
-        avg += (int) scanLine[1];
-        avg += (int) scanLine[2];
+    if(framenum > 3){
+        framenum = 0;
+        // Calculate mean color
+        auto frame = QOpenGLWidget::grabFramebuffer();
+        auto pixelData = frame.convertToFormat(QImage::Format_RGB888);
+        long int avg = 0;
+        videoWidth = pixelData.width();
+        videoHeight = pixelData.height();
+
+        // TODO: stop using scanlines, find a way to use pixeldata.constBits()
+        for (int i = 0; i < frame.height(); i += 1)
+        {
+
+            const uchar *scanLine = pixelData.constScanLine(i);
+            avg += static_cast<int>(scanLine[0]);
+            avg += static_cast<int>(scanLine[1]);
+            avg += static_cast<int>(scanLine[2]);
+        }
+        auto avgFinal = static_cast<float>(avg)/(frame.height() * 3);
+
+
+        Q_EMIT addPlotPoint(avgFinal);
+        //qInfo() << ((float)avg)/(frame.height() * 3);
     }
-    auto avgFinal = ((float)avg)/(frame.height() * 3);
-
-
-    Q_EMIT addPlotPoint(avgFinal);
-    //qInfo() << ((float)avg)/(frame.height() * 3);
-
 }
 
 void MpvWidget::swapped()
@@ -139,23 +155,7 @@ void MpvWidget::on_mpv_events()
 
 void MpvWidget::handle_mpv_event(mpv_event *event)
 {
-
     switch (event->event_id) {
-    case MPV_EVENT_PROPERTY_CHANGE: {
-        mpv_event_property *prop = (mpv_event_property *)event->data;
-        if (strcmp(prop->name, "time-pos") == 0) {
-            if (prop->format == MPV_FORMAT_DOUBLE) {
-                double time = *(double *)prop->data;
-                Q_EMIT positionChanged(time);
-            }
-        } else if (strcmp(prop->name, "duration") == 0) {
-            if (prop->format == MPV_FORMAT_DOUBLE) {
-                double time = *(double *)prop->data;
-                Q_EMIT durationChanged(time);
-            }
-        }
-        break;
-    }
     default: ;
         // Ignore uninteresting or unknown events.
     }
@@ -185,5 +185,5 @@ void MpvWidget::maybeUpdate()
 
 void MpvWidget::on_update(void *ctx)
 {
-    QMetaObject::invokeMethod((MpvWidget*)ctx, "maybeUpdate");
+    QMetaObject::invokeMethod(static_cast<MpvWidget*>(ctx), "maybeUpdate");
 }

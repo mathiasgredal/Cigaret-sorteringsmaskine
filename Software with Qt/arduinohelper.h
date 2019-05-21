@@ -10,7 +10,9 @@ class ArduinoHelper
 public:
     ArduinoHelper();
     QVector<QString> ListCOMPorts();
-    void ArduinoConnect();
+    enum ConnectionErrors {PORT_NOT_FOUND, UNABLE_TO_OPEN_PORT, SUCCES};
+    enum ConnectionErrors ArduinoConnect(int baudrate, QString COMPort);
+    void SendString(QString data);
 private:
     struct sp_port *port;
     int baudrate;

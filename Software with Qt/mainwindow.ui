@@ -16,9 +16,9 @@
   <widget class="QWidget" name="centralWidget">
    <layout class="QGridLayout" name="gridLayout">
     <item row="0" column="0">
-     <layout class="QVBoxLayout" name="verticalLayout" stretch="1,14,1">
+     <layout class="QVBoxLayout" name="verticalLayout" stretch="1,14,0,10">
       <item>
-       <layout class="QHBoxLayout" name="horizontalLayout" stretch="0,0,0,0,0,0,0,0">
+       <layout class="QHBoxLayout" name="topNavBar" stretch="0,0,0,0,0,0,0,0">
         <item>
          <widget class="QLabel" name="label_2">
           <property name="text">
@@ -123,7 +123,7 @@
         <item>
          <widget class="QLineEdit" name="rtsp_input">
           <property name="text">
-           <string>rtsp://wowzaec2demo.streamlock.net/vod/mp4:BigBuckBunny_115k.mov</string>
+           <string>rtsp://192.168.0.9:8554/live.sdp</string>
           </property>
          </widget>
         </item>
@@ -137,35 +137,298 @@
        </layout>
       </item>
       <item>
-       <layout class="QHBoxLayout" name="horizontalLayout_4">
+       <layout class="QHBoxLayout" name="horizontalLayout_4" stretch="1,1">
         <item>
          <widget class="MpvWidget" name="VideoWidget"/>
         </item>
         <item>
-         <widget class="AvgImgPlot" name="liveLinePlot" native="true">
-          <property name="autoFillBackground">
-           <bool>false</bool>
-          </property>
-          <property name="styleSheet">
-           <string notr="true">background: white;</string>
-          </property>
-         </widget>
+         <widget class="AvgImgPlot" name="liveLinePlot" native="true"/>
         </item>
        </layout>
       </item>
       <item>
-       <layout class="QHBoxLayout" name="horizontalLayout_5">
-        <property name="bottomMargin">
-         <number>100</number>
+       <spacer name="horizontalSpacer">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
         </property>
-        <item>
-         <widget class="QPushButton" name="plotbutton">
-          <property name="text">
-           <string>Change plot</string>
-          </property>
-         </widget>
-        </item>
-       </layout>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>40</width>
+          <height>20</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+      <item>
+       <widget class="QTabWidget" name="tabWidget">
+        <property name="tabPosition">
+         <enum>QTabWidget::North</enum>
+        </property>
+        <property name="currentIndex">
+         <number>1</number>
+        </property>
+        <widget class="QWidget" name="Arduino">
+         <attribute name="title">
+          <string>Arduino</string>
+         </attribute>
+         <layout class="QVBoxLayout" name="verticalLayout_2">
+          <item>
+           <layout class="QHBoxLayout" name="horizontalLayout_2" stretch="3,5,7">
+            <item>
+             <widget class="QGroupBox" name="groupBox">
+              <property name="enabled">
+               <bool>true</bool>
+              </property>
+              <property name="title">
+               <string>Arduino Controls</string>
+              </property>
+              <property name="flat">
+               <bool>false</bool>
+              </property>
+              <layout class="QHBoxLayout" name="horizontalLayout_3">
+               <item>
+                <layout class="QHBoxLayout" name="horizontalLayout_5">
+                 <item>
+                  <layout class="QVBoxLayout" name="verticalLayout_3">
+                   <item>
+                    <widget class="QPushButton" name="Arduino_Start">
+                     <property name="text">
+                      <string>Start</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item>
+                    <widget class="QPushButton" name="Arduino_Stop">
+                     <property name="text">
+                      <string>Stop</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item>
+                    <widget class="QPushButton" name="Arduino_Push">
+                     <property name="text">
+                      <string>Push</string>
+                     </property>
+                    </widget>
+                   </item>
+                  </layout>
+                 </item>
+                </layout>
+               </item>
+              </layout>
+             </widget>
+            </item>
+            <item>
+             <widget class="QGroupBox" name="groupBox_2">
+              <property name="maximumSize">
+               <size>
+                <width>160000</width>
+                <height>16777215</height>
+               </size>
+              </property>
+              <property name="title">
+               <string>Graph controls</string>
+              </property>
+              <layout class="QVBoxLayout" name="verticalLayout_4" stretch="0,0,1,0">
+               <item>
+                <layout class="QHBoxLayout" name="layout123" stretch="2,5">
+                 <property name="topMargin">
+                  <number>0</number>
+                 </property>
+                 <item>
+                  <widget class="QLabel" name="Px_Pr_CM_Label">
+                   <property name="text">
+                    <string>Px. pr. cm:</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QLineEdit" name="Pixels_Per_CM_Input">
+                   <property name="minimumSize">
+                    <size>
+                     <width>0</width>
+                     <height>0</height>
+                    </size>
+                   </property>
+                   <property name="maximumSize">
+                    <size>
+                     <width>16777215</width>
+                     <height>16777215</height>
+                    </size>
+                   </property>
+                  </widget>
+                 </item>
+                </layout>
+               </item>
+               <item>
+                <layout class="QHBoxLayout" name="horizontalLayout_7" stretch="2,5">
+                 <property name="topMargin">
+                  <number>0</number>
+                 </property>
+                 <item>
+                  <widget class="QLabel" name="Dist_To_Pusher_Label">
+                   <property name="minimumSize">
+                    <size>
+                     <width>0</width>
+                     <height>0</height>
+                    </size>
+                   </property>
+                   <property name="text">
+                    <string>Dist. to Pusher: </string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QLineEdit" name="Dist_To_Pusher_Input">
+                   <property name="minimumSize">
+                    <size>
+                     <width>0</width>
+                     <height>0</height>
+                    </size>
+                   </property>
+                   <property name="maximumSize">
+                    <size>
+                     <width>16777215</width>
+                     <height>16777215</height>
+                    </size>
+                   </property>
+                  </widget>
+                 </item>
+                </layout>
+               </item>
+               <item>
+                <layout class="QHBoxLayout" name="horizontalLayout" stretch="4,2,8">
+                 <property name="spacing">
+                  <number>6</number>
+                 </property>
+                 <item>
+                  <widget class="QLabel" name="label_3">
+                   <property name="text">
+                    <string>Avg. trigger:</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QLineEdit" name="refLineInput">
+                   <property name="minimumSize">
+                    <size>
+                     <width>0</width>
+                     <height>0</height>
+                    </size>
+                   </property>
+                   <property name="maximumSize">
+                    <size>
+                     <width>50</width>
+                     <height>16777215</height>
+                    </size>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QSlider" name="refLineSlider">
+                   <property name="minimumSize">
+                    <size>
+                     <width>0</width>
+                     <height>0</height>
+                    </size>
+                   </property>
+                   <property name="maximumSize">
+                    <size>
+                     <width>16777215</width>
+                     <height>16777215</height>
+                    </size>
+                   </property>
+                   <property name="autoFillBackground">
+                    <bool>false</bool>
+                   </property>
+                   <property name="inputMethodHints">
+                    <set>Qt::ImhNone</set>
+                   </property>
+                   <property name="maximum">
+                    <number>255</number>
+                   </property>
+                   <property name="orientation">
+                    <enum>Qt::Horizontal</enum>
+                   </property>
+                   <property name="invertedAppearance">
+                    <bool>false</bool>
+                   </property>
+                   <property name="invertedControls">
+                    <bool>false</bool>
+                   </property>
+                   <property name="tickPosition">
+                    <enum>QSlider::NoTicks</enum>
+                   </property>
+                  </widget>
+                 </item>
+                </layout>
+               </item>
+               <item>
+                <widget class="QPushButton" name="Sorting_Start_Button">
+                 <property name="text">
+                  <string>START AUTOMATIC SORTING</string>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </widget>
+            </item>
+            <item>
+             <widget class="QWidget" name="widget" native="true"/>
+            </item>
+           </layout>
+          </item>
+         </layout>
+        </widget>
+        <widget class="QWidget" name="Neural_Network_Tab">
+         <attribute name="title">
+          <string>Neural Network</string>
+         </attribute>
+         <layout class="QHBoxLayout" name="horizontalLayout_6" stretch="2,3,6">
+          <item>
+           <layout class="QVBoxLayout" name="Neural_Network_ButtonLayout" stretch="0,0,0">
+            <property name="topMargin">
+             <number>0</number>
+            </property>
+            <property name="bottomMargin">
+             <number>0</number>
+            </property>
+            <item>
+             <widget class="QPushButton" name="Start_Neural_Network">
+              <property name="text">
+               <string>Start Neural Engine</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="Scan_Image">
+              <property name="text">
+               <string>Scan current image</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="Draw_Preview">
+              <property name="text">
+               <string>Draw preview</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+          <item>
+           <widget class="Neural_Network_Preview" name="Neural_Networ_Output_Preview" native="true">
+            <property name="styleSheet">
+             <string notr="true">background: #202020</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="NN_Interface" name="Neural_Network_Output"/>
+          </item>
+         </layout>
+        </widget>
+       </widget>
       </item>
      </layout>
     </item>
@@ -193,6 +456,17 @@
    <class>AvgImgPlot</class>
    <extends>QWidget</extends>
    <header location="global">avgimgplot.h</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>NN_Interface</class>
+   <extends>QTextBrowser</extends>
+   <header>nn_interface.h</header>
+  </customwidget>
+  <customwidget>
+   <class>Neural_Network_Preview</class>
+   <extends>QWidget</extends>
+   <header location="global">neural_network_preview.h</header>
    <container>1</container>
   </customwidget>
  </customwidgets>

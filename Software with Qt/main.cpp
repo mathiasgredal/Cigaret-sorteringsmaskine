@@ -10,7 +10,7 @@ int main(int argc, char *argv[])
     setlocale(LC_ALL, "C");
 
     MainWindow w;
-    w.show();
+    w.showFullScreen();
 
     return a.exec();
 }

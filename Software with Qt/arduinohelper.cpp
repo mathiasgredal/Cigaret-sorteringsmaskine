@@ -27,9 +27,9 @@ QVector<QString> ArduinoHelper::ListCOMPorts()
     return ports;
 }
 
-void ArduinoHelper::ArduinoConnect()
+enum ArduinoHelper::ConnectionErrors ArduinoHelper::ArduinoConnect(int baudrate, QString COMPort)
 {
-    sp_return error = sp_get_port_by_name(comport,&port);
+    sp_return error = sp_get_port_by_name(COMPort.toStdString().c_str(),&port);
 
     if(error == SP_OK)
     {
@@ -37,12 +37,22 @@ void ArduinoHelper::ArduinoConnect()
 
         if(error == SP_OK)
         {
-            sp_set_baudrate(port,57600);
+            sp_set_baudrate(port,baudrate);
 
-            sp_nonblocking_write(port, "hej", sizeof ("hej"));
+            sp_nonblocking_write(port, "e", sizeof ("e"));
 
-
+            return ArduinoHelper::ConnectionErrors::SUCCES;
+        }
+        else {
+            return ArduinoHelper::ConnectionErrors::UNABLE_TO_OPEN_PORT;
         }
 
     }
+    else {
+        return ArduinoHelper::ConnectionErrors::PORT_NOT_FOUND;
+    }
+}
+
+void ArduinoHelper::SendString(QString data){
+    sp_nonblocking_write(port, data.toStdString().c_str(), sizeof (data.toStdString().c_str()));
 }

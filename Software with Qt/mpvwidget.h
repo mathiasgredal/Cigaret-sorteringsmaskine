@@ -10,30 +10,39 @@ class MpvWidget Q_DECL_FINAL: public QOpenGLWidget
 {
     Q_OBJECT
 public:
-    MpvWidget(QWidget *parent = 0, Qt::WindowFlags f = 0);
-    ~MpvWidget();
+    int framenum = 0;
+    int videoWidth = 0;
+    int videoHeight = 0;
+
+    MpvWidget(QWidget *parent = nullptr, Qt::WindowFlags f = nullptr);
+    ~MpvWidget() override;
     void command(const QVariant& params);
     void setProperty(const QString& name, const QVariant& value);
     QVariant getProperty(const QString& name) const;
-    QSize sizeHint() const { return QSize(480, 270);}
+    QSize sizeHint() const override { return QSize(480, 270);}
     void stopStream();
-Q_SIGNALS:
-    void durationChanged(int value);
-    void positionChanged(int value);
-    void addPlotPoint(float meanColor);
-protected:
-    void initializeGL() Q_DECL_OVERRIDE;
-    void paintGL() Q_DECL_OVERRIDE;
-private Q_SLOTS:
-    void swapped();
-    void on_mpv_events();
-    void maybeUpdate();
+    QImage screenCapture();
+
 private:
     void handle_mpv_event(mpv_event *event);
     static void on_update(void *ctx);
     mpv::qt::Handle mpv;
     mpv_opengl_cb_context *mpv_gl;
 
+protected:
+    void initializeGL() Q_DECL_OVERRIDE;
+    void paintGL() Q_DECL_OVERRIDE;
+    virtual void resizeEvent(QResizeEvent *event) Q_DECL_OVERRIDE;
+
+signals:
+    void durationChanged(int value);
+    void positionChanged(int value);
+    void addPlotPoint(float meanColor);
+
+private slots:
+    void swapped();
+    void on_mpv_events();
+    void maybeUpdate();
 };
 
 
